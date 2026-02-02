@@ -57,7 +57,7 @@ def handle_error(e: Exception, exit_code: int = 1) -> None:
         exit_code: Exit code to use (default: 1)
     """
     if isinstance(e, BackpackError):
-        logger.error("Backpack error", extra={"type": type(e).__name__, "message": e.message})
+        logger.error("Backpack error", extra={"type": type(e).__name__, "error_message": e.message})
         click.echo(click.style(f"Error: {e.message}", fg="red"), err=True)
         if e.details:
             click.echo(click.style(f"  {e.details}", fg="yellow"), err=True)
