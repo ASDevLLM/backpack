@@ -3,9 +3,13 @@ Agent lock file management.
 
 This module provides the AgentLock class for creating, reading, and updating
 encrypted agent.lock files that contain credentials, personality, and memory.
+
+Logging in this module focuses on file paths and operation outcomes only.
+No decrypted contents are ever logged.
 """
 
 import json
+import logging
 import os
 from typing import Dict, Any, Optional
 
@@ -17,6 +21,8 @@ from .exceptions import (
     InvalidPathError,
     ValidationError,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class AgentLock:
@@ -88,6 +94,7 @@ class AgentLock:
 
             with open(self.file_path, "w") as f:
                 json.dump(data, f, indent=2)
+            logger.info("Created agent.lock file", extra={"path": self.file_path})
         except PermissionError as e:
             raise AgentLockWriteError(self.file_path, f"Permission denied: {str(e)}") from e
         except OSError as e:
@@ -109,6 +116,7 @@ class AgentLock:
             InvalidPathError: If the path exists but is not a file.
         """
         if not os.path.exists(self.file_path):
+            logger.debug("agent.lock file not found", extra={"path": self.file_path})
             return None
 
         if not os.path.isfile(self.file_path):
@@ -119,6 +127,7 @@ class AgentLock:
                 data = json.load(f)
         except json.JSONDecodeError:
             # Corrupted file (or wrong content) -> treat as unreadable
+            logger.warning("agent.lock file is not valid JSON", extra={"path": self.file_path})
             return None
         except PermissionError as e:
             raise AgentLockReadError(self.file_path, f"Permission denied: {str(e)}") from e
@@ -129,26 +138,37 @@ class AgentLock:
 
         # Validate file structure (treat invalid as unreadable)
         if not isinstance(data, dict):
+            logger.warning("agent.lock file has invalid structure", extra={"path": self.file_path})
             return None
         if "layers" not in data or not isinstance(data["layers"], dict):
+            logger.warning("agent.lock missing 'layers' section", extra={"path": self.file_path})
             return None
 
         required_layers = ["credentials", "personality", "memory"]
         for layer in required_layers:
             if layer not in data["layers"]:
+                logger.warning(
+                    "agent.lock missing required layer",
+                    extra={"path": self.file_path, "layer": layer},
+                )
                 return None
 
         try:
-            return {
+            result = {
                 "credentials": json.loads(decrypt_data(data["layers"]["credentials"], self.master_key)),
                 "personality": json.loads(decrypt_data(data["layers"]["personality"], self.master_key)),
                 "memory": json.loads(decrypt_data(data["layers"]["memory"], self.master_key)),
             }
+            logger.debug("Successfully read agent.lock file", extra={"path": self.file_path})
+            return result
         except DecryptionError:
+            logger.warning("Failed to decrypt agent.lock file", extra={"path": self.file_path})
             return None
         except json.JSONDecodeError:
+            logger.warning("Decrypted agent.lock contents are not valid JSON", extra={"path": self.file_path})
             return None
-        except Exception:
+        except Exception as e:
+            logger.error("Unexpected error reading agent.lock file", extra={"path": self.file_path, "error": str(e)})
             return None
 
     def update_memory(self, memory: Dict[str, Any]) -> None:

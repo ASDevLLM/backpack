@@ -3,12 +3,17 @@ Cryptographic utilities for encrypting and decrypting agent data.
 
 This module provides functions for deriving encryption keys from passwords
 using PBKDF2 and encrypting/decrypting data using Fernet symmetric encryption.
+
+Logging in this module is intentionally minimal and NEVER includes any
+secret material such as passwords, salts, or ciphertext. Only operation
+types and high-level status are logged.
 """
 
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import base64
+import logging
 import os
 
 from .exceptions import (
@@ -18,6 +23,8 @@ from .exceptions import (
     InvalidPasswordError,
     ValidationError,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def derive_key(password: str, salt: bytes = None) -> bytes:
@@ -62,6 +69,7 @@ def derive_key(password: str, salt: bytes = None) -> bytes:
             iterations=100000,
         )
         key = base64.urlsafe_b64encode(kdf.derive(password.encode()))
+        logger.debug("Derived encryption key using PBKDF2", extra={"salt_len": len(salt)})
         return key, salt
     except Exception as e:
         if isinstance(e, (InvalidPasswordError, ValidationError)):
@@ -96,6 +104,7 @@ def encrypt_data(data: str, password: str) -> dict:
         key, salt = derive_key(password)
         f = Fernet(key)
         encrypted = f.encrypt(data.encode())
+        logger.debug("Encrypted data string", extra={"cipher_len": len(encrypted)})
         return {
             "data": base64.b64encode(encrypted).decode(),
             "salt": base64.b64encode(salt).decode(),

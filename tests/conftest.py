@@ -3,10 +3,16 @@ Pytest configuration and shared fixtures for Backpack tests.
 """
 
 import os
+import sys
 import tempfile
 import shutil
 import pytest
-from pathlib import Path
+
+# Add src directory to Python path so tests can import backpack without
+# installation. This allows tests to run without needing: pip install -e .
+src_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "src")
+if src_path not in sys.path:
+    sys.path.insert(0, src_path)
 
 
 @pytest.fixture

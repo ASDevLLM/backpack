@@ -32,8 +32,9 @@ I've analyzed your codebase and created a comprehensive word-of-mouth growth str
 
 I've already started implementing **Quick Win #1: PyPI Package**:
 - ✅ Created `pyproject.toml` for modern Python packaging
-- ✅ Added `__version__ = "0.1.0"` to `src/__init__.py`
+- ✅ Added `__version__ = "0.1.1"` to `src/backpack/__init__.py`
 - ✅ Configured entry points for `backpack` command
+- ✅ Built distribution packages (wheel and sdist)
 
 **Next Steps for PyPI**:
 1. Test local installation: `pip install -e .`

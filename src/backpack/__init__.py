@@ -5,7 +5,7 @@ This package provides the CLI and primitives for managing encrypted agent
 containers (`agent.lock`), secure key storage, and just-in-time injection.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 # Export exceptions for easy importing
 from .exceptions import (  # noqa: F401

@@ -3,14 +3,19 @@ OS keychain integration for secure credential storage.
 
 This module provides functions for storing, retrieving, and managing
 API keys and other credentials using the platform's native keyring service.
+
+Logging in this module NEVER records secret key values. Only key names and
+high-level operation results are logged.
 """
 
 import json
+import logging
 from typing import Dict, Optional
 
 import keyring
 import keyring.errors
 
+from .audit import AuditLogger
 from .exceptions import (
     KeychainAccessError,
     KeychainStorageError,
@@ -20,6 +25,8 @@ from .exceptions import (
 )
 
 SERVICE_NAME = "backpack-agent"
+logger = logging.getLogger(__name__)
+audit_logger = AuditLogger()
 
 
 def _validate_key_name(key_name: str) -> None:
@@ -66,6 +73,7 @@ def store_key(key_name: str, key_value: str) -> None:
 
     try:
         keyring.set_password(SERVICE_NAME, key_name, key_value)
+        logger.info("Stored key in keychain", extra={"service": SERVICE_NAME, "key_name": key_name})
     except keyring.errors.KeyringError as e:
         raise KeychainStorageError(key_name, f"Keyring error: {str(e)}") from e
     except Exception as e:
@@ -89,7 +97,12 @@ def get_key(key_name: str) -> Optional[str]:
     _validate_key_name(key_name)
 
     try:
-        return keyring.get_password(SERVICE_NAME, key_name)
+        value = keyring.get_password(SERVICE_NAME, key_name)
+        logger.debug(
+            "Retrieved key from keychain",
+            extra={"service": SERVICE_NAME, "key_name": key_name, "found": bool(value)},
+        )
+        return value
     except keyring.errors.KeyringError as e:
         raise KeychainAccessError(f"Failed to retrieve key '{key_name}' from keychain", str(e)) from e
     except Exception as e:
@@ -166,6 +179,7 @@ def delete_key(key_name: str) -> None:
     # - Tests expect delete_key() to not raise for missing keys.
     try:
         keyring.delete_password(SERVICE_NAME, key_name)
+        audit_logger.log_event("delete_key", {"service": SERVICE_NAME, "key_name": key_name})
     except keyring.errors.PasswordDeleteError:
         pass
     except keyring.errors.KeyringError as e:

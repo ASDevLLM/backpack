@@ -101,6 +101,20 @@ backpack run agents/financial_analyst.py
 6. Injects personality variables (e.g., `AGENT_SYSTEM_PROMPT`, `AGENT_TONE`)
 7. Executes the agent script
 
+#### Logging for `run`
+
+The CLI and core modules use Python's `logging`:
+
+- By default, logs at `INFO` level to stderr when using the CLI.
+- Change verbosity with `BACKPACK_LOG_LEVEL`:
+
+```bash
+BACKPACK_LOG_LEVEL=DEBUG backpack run agent.py
+```
+
+Only high-level events (file paths, key names, statuses) are logged;
+**secret values are never logged**.
+
 ### `key` - Keychain Management
 
 Manage credentials in your personal OS keychain.

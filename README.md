@@ -181,11 +181,13 @@ Backpack includes a comprehensive test suite using pytest.
 
 ### Running Tests
 
+Tests can run **without installing** the package (conftest.py adds `src` to `PYTHONPATH`):
+
 ```bash
 # Install test dependencies
 pip install -r requirements.txt
 
-# Run all tests
+# Run all tests (no pip install -e . required)
 pytest
 
 # Run with coverage report
@@ -197,6 +199,23 @@ pytest tests/test_crypto.py
 # Run with verbose output
 pytest -v
 ```
+
+Alternatively, install in editable mode first: `pip install -e .`
+
+### Logging
+
+Backpack uses Python's standard `logging` module:
+
+- Library modules (`crypto`, `keychain`, `agent_lock`) log at module level
+- The CLI configures a default logger when invoked
+- Control verbosity with the `BACKPACK_LOG_LEVEL` environment variable
+  (e.g. `DEBUG`, `INFO`, `WARNING`):
+
+```bash
+BACKPACK_LOG_LEVEL=DEBUG backpack run agent.py
+```
+
+No secret values (keys, ciphertext, plaintext) are ever written to logs.
 
 ### Test Coverage
 
@@ -259,7 +278,8 @@ For detailed architecture documentation, see [ARCHITECTURE.md](ARCHITECTURE.md).
 - **[ARCHITECTURE.md](ARCHITECTURE.md)**: System architecture and design decisions
 - **[SECURITY.md](SECURITY.md)**: Security considerations and best practices
 - **[CONTRIBUTING.md](CONTRIBUTING.md)**: Guidelines for contributing to the project
-- **[PROJECT_ASSESSMENT.md](PROJECT_ASSESSMENT.md)**: Comprehensive project assessment and gap analysis
+- **[PROJECT_ASSESSMENT.md](PROJECT_ASSESSMENT.md)**: Comprehensive project assessment
+- **[OPTIONAL_IMPROVEMENTS.md](OPTIONAL_IMPROVEMENTS.md)**: List of optional future enhancements
 
 ## Security
 

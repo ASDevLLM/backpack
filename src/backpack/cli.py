@@ -3,14 +3,19 @@ Command-line interface for Backpack Agent Container System.
 
 This module provides CLI commands for managing agents, keys, and running
 agents with JIT variable injection.
+
+Logging is configured here for CLI usage. By default it logs at INFO level,
+and can be controlled via the BACKPACK_LOG_LEVEL environment variable.
 """
 
 import click
 import json
+import logging
 import os
 import shutil
+import subprocess
 import sys
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from .agent_lock import AgentLock
 from .keychain import (
@@ -26,6 +31,23 @@ from .keychain import (
 from .exceptions import BackpackError, ValidationError
 
 
+def _configure_logging() -> logging.Logger:
+    """
+    Configure a default logger for CLI usage if none is configured.
+
+    The log level can be overridden with BACKPACK_LOG_LEVEL (e.g. DEBUG, INFO).
+    """
+    root = logging.getLogger()
+    if not root.handlers:
+        level_name = os.environ.get("BACKPACK_LOG_LEVEL", "INFO").upper()
+        level = getattr(logging, level_name, logging.INFO)
+        logging.basicConfig(level=level, format="%(levelname)s %(name)s: %(message)s")
+    return logging.getLogger(__name__)
+
+
+logger = _configure_logging()
+
+
 def handle_error(e: Exception, exit_code: int = 1) -> None:
     """
     Handle and display errors in a user-friendly way.
@@ -35,12 +57,14 @@ def handle_error(e: Exception, exit_code: int = 1) -> None:
         exit_code: Exit code to use (default: 1)
     """
     if isinstance(e, BackpackError):
+        logger.error("Backpack error", extra={"type": type(e).__name__, "message": e.message})
         click.echo(click.style(f"Error: {e.message}", fg="red"), err=True)
         if e.details:
             click.echo(click.style(f"  {e.details}", fg="yellow"), err=True)
     elif isinstance(e, click.ClickException):
         raise e
     else:
+        logger.error("Unexpected error in CLI", extra={"type": type(e).__name__, "error": str(e)})
         click.echo(click.style(f"Unexpected error: {str(e)}", fg="red"), err=True)
         if hasattr(e, "__cause__") and e.__cause__:
             click.echo(click.style(f"  Caused by: {str(e.__cause__)}", fg="yellow"), err=True)
@@ -218,11 +242,18 @@ def run(script_path):
     env_vars["AGENT_SYSTEM_PROMPT"] = agent_data["personality"]["system_prompt"]
     env_vars["AGENT_TONE"] = agent_data["personality"]["tone"]
 
-    for key, value in env_vars.items():
-        os.environ[key] = value
+    # Merge injected env vars with current environment
+    env = os.environ.copy()
+    env.update(env_vars)
 
     click.echo(f"Running {script_path} with {len(env_vars)} injected variables...")
-    os.system(f"python {script_path}")
+    
+    # Use subprocess.run() instead of os.system() for better control and security
+    # sys.executable ensures we use the same Python interpreter
+    result = subprocess.run([sys.executable, script_path], env=env)
+    
+    # Exit with the script's return code
+    sys.exit(result.returncode)
 
 
 @cli.group()
