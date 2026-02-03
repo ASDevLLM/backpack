@@ -45,15 +45,24 @@ def _configure_logging() -> logging.Logger:
     Configure a default logger for CLI usage if none is configured.
 
     The log level can be overridden with BACKPACK_LOG_LEVEL (e.g. DEBUG, INFO).
+    Can log to a file if BACKPACK_LOG_FILE is set.
     """
     root = logging.getLogger()
     if not root.handlers:
         level_name = os.environ.get("BACKPACK_LOG_LEVEL", "INFO").upper()
         level = getattr(logging, level_name, logging.INFO)
+        
+        handlers = [logging.StreamHandler(sys.stderr)]
+        
+        log_file = os.environ.get("BACKPACK_LOG_FILE")
+        if log_file:
+            handlers.append(logging.FileHandler(log_file))
+            
         logging.basicConfig(
             level=level, 
             format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-            datefmt="%H:%M:%S"
+            datefmt="%H:%M:%S",
+            handlers=handlers
         )
     return logging.getLogger(__name__)
 
@@ -235,6 +244,57 @@ def init(credentials, personality):
         handle_error(e)
     except Exception as e:
         handle_error(e)
+
+
+@cli.command()
+@click.option("--new-key", help="New master key (prompted if not provided)")
+@click.option("--key-file", default="agent.lock", help="Path to agent.lock file")
+def rotate(new_key, key_file):
+    """
+    Rotate the master encryption key for agent.lock.
+    
+    Decrypts the current agent.lock with the current key (AGENT_MASTER_KEY),
+    and re-encrypts it with the new key.
+    """
+    if not os.path.exists(key_file):
+        click.echo(click.style(f"File {key_file} not found.", fg="red"))
+        sys.exit(1)
+        
+    # 1. Read with current key
+    current_lock = AgentLock(key_file)
+    data = current_lock.read()
+    
+    if data is None:
+        click.echo(click.style("Failed to decrypt agent.lock with current key.", fg="red"))
+        click.echo("Check if AGENT_MASTER_KEY is set correctly.")
+        sys.exit(1)
+        
+    click.echo(click.style(f"Successfully decrypted {key_file}", fg="green"))
+    
+    # 2. Get new key
+    if not new_key:
+        click.echo("\nYou are about to rotate the master key.")
+        click.echo("Please provide a new secure master key.")
+        new_key = click.prompt("New Master Key", hide_input=True, confirmation_prompt=True)
+        
+    if not new_key:
+        click.echo("Key cannot be empty.")
+        sys.exit(1)
+        
+    # 3. Write with new key
+    try:
+        # Create a new lock instance with the NEW key
+        new_lock = AgentLock(key_file, master_key=new_key)
+        new_lock.create(data["credentials"], data["personality"], data["memory"])
+        
+        click.echo(click.style(f"\n[OK] Re-encrypted {key_file} with new key.", fg="green"))
+        click.echo(click.style("\nIMPORTANT:", fg="yellow", bold=True))
+        click.echo(f"You MUST update your AGENT_MASTER_KEY environment variable to the new key.")
+        click.echo("If you lose this key, you cannot access the agent.lock file again.")
+        
+    except Exception as e:
+        click.echo(click.style(f"Failed to rotate key: {e}", fg="red"))
+        sys.exit(1)
 
 
 @cli.command()

@@ -49,15 +49,17 @@ dev = [
     "pytest>=7.4.3",
     "pytest-cov>=4.1.0",
     "pytest-mock>=3.12.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
     "build",
     "twine",
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/backpack"
-Documentation = "https://github.com/yourusername/backpack#readme"
-Repository = "https://github.com/yourusername/backpack"
-Issues = "https://github.com/yourusername/backpack/issues"
+Homepage = "https://github.com/ASDevLLM/PacAgent"
+Documentation = "https://github.com/ASDevLLM/PacAgent#readme"
+Repository = "https://github.com/ASDevLLM/PacAgent"
+Issues = "https://github.com/ASDevLLM/PacAgent/issues"
 
 [project.scripts]
 backpack = "backpack.cli:cli"
@@ -68,6 +70,7 @@ package-dir = {"" = "src"}
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["backpack*"]
+exclude = ["*__pycache__*"]
 
 [tool.setuptools.package-data]
 "*" = ["*.md", "*.txt"]

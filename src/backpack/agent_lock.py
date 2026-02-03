@@ -38,15 +38,16 @@ class AgentLock:
     All data is encrypted using a master key (from AGENT_MASTER_KEY env var).
     """
 
-    def __init__(self, file_path: str = "agent.lock"):
+    def __init__(self, file_path: str = "agent.lock", master_key: str = None):
         """
         Initialize an AgentLock instance.
 
         Args:
             file_path: Path to the agent.lock file (default: "agent.lock")
+            master_key: Optional master key to use (overrides env var)
         """
         self.file_path = file_path
-        self.master_key = os.environ.get("AGENT_MASTER_KEY", "default-key")
+        self.master_key = master_key or os.environ.get("AGENT_MASTER_KEY", "default-key")
         self.audit_logger = AuditLogger()
 
     def create(self, credentials: Dict[str, str], personality: Dict[str, str], memory: Dict[str, Any] = None) -> None:
