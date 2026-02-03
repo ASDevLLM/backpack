@@ -16,7 +16,7 @@ import shutil
 import subprocess
 import sys
 import zipfile
-from typing import Any, Dict, List
+from typing import Dict, List
 
 import click
 
@@ -81,24 +81,11 @@ def handle_error(e: Exception, exit_code: int = 1) -> None:
             
         # Add helpful tips based on exception type
         if isinstance(e, KeyNotFoundError):
-            click.echo(
-                click.style("  💡 Tip: List available keys with 'backpack key list'", fg="cyan"), err=True
-            )
+            click.echo(click.style("  💡 Tip: List available keys with 'backpack key list'", fg="cyan"), err=True)
         elif isinstance(e, AgentLockNotFoundError):
-            click.echo(
-                click.style(
-                    "  💡 Tip: Initialize an agent with 'backpack init' or 'backpack quickstart'",
-                    fg="cyan",
-                ),
-                err=True,
-            )
+            click.echo(click.style("  💡 Tip: Initialize an agent with 'backpack init' or 'backpack quickstart'", fg="cyan"), err=True)
         elif isinstance(e, AgentLockReadError):
-            click.echo(
-                click.style(
-                    "  💡 Tip: Check file permissions or if the file is corrupted.", fg="cyan"
-                ),
-                err=True,
-            )
+            click.echo(click.style("  💡 Tip: Check file permissions or if the file is corrupted.", fg="cyan"), err=True)
             
     elif isinstance(e, click.ClickException):
         raise e
@@ -168,19 +155,13 @@ def quickstart(non_interactive):
         if not creds:
             creds = {"OPENAI_API_KEY": "placeholder_openai_api_key"}
 
-        personality_data = {
-            "system_prompt": personality_text or "You are a helpful AI assistant.",
-            "tone": "professional",
-        }
+        personality_data = {"system_prompt": personality_text or "You are a helpful AI assistant.", "tone": "professional"}
 
         agent_lock.create(creds, personality_data)
         click.echo(click.style(f"\n[OK] Created agent.lock with {len(creds)} credential(s)", fg="green"))
 
         # Generate starter agent.py
-        agent_py = _QUICKSTART_AGENT_SCRIPT.format(
-            agent_name=agent_name or "My Agent",
-            creds_list=", ".join(repr(k) for k in creds),
-        )
+        agent_py = _QUICKSTART_AGENT_SCRIPT.format(agent_name=agent_name or "My Agent", creds_list=", ".join(repr(k) for k in creds))
         agent_path = "agent.py"
         if os.path.exists(agent_path) and not non_interactive:
             if not click.confirm(f"{agent_path} already exists. Overwrite?"):
@@ -313,21 +294,11 @@ def rotate(new_key, key_file):
 
 @cli.command()
 @click.argument("script_path")
-@click.option(
-    "--non-interactive",
-    is_flag=True,
-    help="Skip prompts (auto-approve keys) - enabled automatically if AGENT_MASTER_KEY is set",
-)
+@click.option("--non-interactive", is_flag=True, help="Skip prompts (auto-approve keys) - enabled automatically if AGENT_MASTER_KEY is set")
 def run(script_path, non_interactive):
     """
     Run an agent with JIT variable injection.
     """
-    if not os.path.exists(script_path):
-        raise click.ClickException(f"Script not found: {script_path}")
-    
-    # Canonicalize path to avoid issues with subprocess
-    script_path = os.path.abspath(script_path)
-
     agent_lock = AgentLock()
     agent_data = agent_lock.read()
 
@@ -396,13 +367,8 @@ def run(script_path, non_interactive):
             click.echo(f"Key {key_name} not found in environment, agent.lock, or vault.")
             click.echo(f"  Add it with 'backpack key add {key_name}' or set it as an environment variable.")
 
-    env_vars["AGENT_SYSTEM_PROMPT"] = agent_data["personality"].get("system_prompt", "")
-    env_vars["AGENT_TONE"] = agent_data["personality"].get("tone", "professional")
-    
-    # Inject deployment configuration
-    deployment_config = agent_data.get("deployment", {})
-    if deployment_config:
-        env_vars["AGENT_DEPLOYMENT_CONFIG"] = json.dumps(deployment_config)
+    env_vars["AGENT_SYSTEM_PROMPT"] = agent_data["personality"]["system_prompt"]
+    env_vars["AGENT_TONE"] = agent_data["personality"]["tone"]
 
     # Merge injected env vars with current environment
     env = os.environ.copy()
@@ -535,31 +501,9 @@ def template_list():
             click.echo(f"  {name}")
 
 
-def _load_mixins(mixins: List[str]) -> Dict[str, Any]:
-    """Load and merge common configuration templates."""
-    common_dir = os.path.join(_get_templates_dir(), "common")
-    config = {}
-    for mixin in mixins:
-        path = os.path.join(common_dir, f"{mixin}.json")
-        if os.path.exists(path):
-            try:
-                with open(path) as f:
-                    mixin_data = json.load(f)
-                    config.update(mixin_data)
-            except Exception as e:
-                logger.warning(f"Failed to load mixin {mixin}: {e}")
-    return config
-
-
 @template.command("use")
 @click.argument("name")
-@click.option(
-    "--dir",
-    "target_dir",
-    type=click.Path(),
-    default=".",
-    help="Directory to copy template into (default: current)",
-)
+@click.option("--dir", "target_dir", type=click.Path(), default=".", help="Directory to copy template into (default: current)")
 def template_use(name, target_dir):
     """Copy a template into the current (or given) directory and create agent.lock."""
     root = _get_templates_dir()
@@ -581,22 +525,18 @@ def template_use(name, target_dir):
 
     creds_list = manifest.get("credentials", [])
     personality = manifest.get("personality", {})
-    mixins = manifest.get("mixins", [])
-    
     creds = {c: f"placeholder_{c.lower()}" for c in creds_list}
     personality_data = {
         "system_prompt": personality.get("system_prompt", "You are a helpful AI assistant."),
         "tone": personality.get("tone", "professional"),
     }
-    
-    deployment_data = _load_mixins(mixins)
 
     os.makedirs(target_dir, exist_ok=True)
     agent_lock = AgentLock(file_path=os.path.join(target_dir, "agent.lock"))
     if os.path.exists(agent_lock.file_path) and not click.confirm(f"{agent_lock.file_path} exists. Overwrite?"):
         click.echo("Skipped agent.lock.")
     else:
-        agent_lock.create(creds, personality_data, deployment=deployment_data)
+        agent_lock.create(creds, personality_data)
         click.echo(click.style(f"[OK] Created {agent_lock.file_path}", fg="green"))
 
     agent_src = os.path.join(template_path, "agent.py")
@@ -792,8 +732,7 @@ def status(json_output):
                 "layers": {
                     "credentials": list(data.get("credentials", {}).keys()),
                     "personality": data.get("personality", {}),
-                    "memory": data.get("memory", {}),
-                    "deployment": data.get("deployment", {})
+                    "memory": data.get("memory", {})
                 }
             }
             click.echo(json.dumps(output, indent=2))
@@ -817,9 +756,6 @@ def status(json_output):
         
         memory = data.get("memory", {})
         click.echo(f"    - Memory: {len(memory)} items")
-
-        deployment = data.get("deployment", {})
-        click.echo(f"    - Deployment: {len(deployment)} items")
         
     except Exception as e:
         if json_output:

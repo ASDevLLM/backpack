@@ -5,7 +5,6 @@
   "personality": {
     "system_prompt": "You are a helpful Twitter bot. Write concise, engaging tweets. Stay on-brand and avoid controversy. Use a friendly, approachable tone.",
     "tone": "friendly"
-  },
-  "mixins": ["logging"]
+  }
 }
 

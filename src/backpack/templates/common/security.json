@@ -1,5 +1,0 @@
-{
-  "allowed_domains": ["api.openai.com"],
-  "allow_file_access": false,
-  "max_requests_per_minute": 60
-}
