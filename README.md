@@ -156,7 +156,7 @@ backpack run agent.py
 backpack demo
 ```
 
-For detailed usage, see [USAGE.md](USAGE.md).
+For detailed usage, see [USAGE.md](docs/USAGE.md).
 
 ## Templates & Examples
 
@@ -236,12 +236,14 @@ backpack/
 ├── requirements.txt      # Python dependencies
 ├── pytest.ini           # Pytest configuration
 ├── README.md            # This file
-├── USAGE.md             # Usage guide
-├── ARCHITECTURE.md      # Architecture documentation
-├── SECURITY.md          # Security considerations
 ├── CONTRIBUTING.md      # Contributing guidelines
 ├── LICENSE              # MIT License
 ├── .gitignore          # Git ignore rules
+├── docs/                # Documentation
+│   ├── api/             # API Reference
+│   ├── ARCHITECTURE.md  # Architecture docs
+│   ├── USAGE.md         # Usage guide
+│   └── ...
 ├── src/
 │   └── backpack/
 │       ├── __init__.py
@@ -270,16 +272,17 @@ Backpack implements a three-layer encryption system:
 
 All layers are encrypted using PBKDF2 key derivation and Fernet symmetric encryption. The master key can be set via the `AGENT_MASTER_KEY` environment variable.
 
-For detailed architecture documentation, see [ARCHITECTURE.md](ARCHITECTURE.md).
+For detailed architecture documentation, see [ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Documentation
 
-- **[USAGE.md](USAGE.md)**: Detailed usage guide with examples
-- **[ARCHITECTURE.md](ARCHITECTURE.md)**: System architecture and design decisions
-- **[SECURITY.md](SECURITY.md)**: Security considerations and best practices
+- **[USAGE.md](docs/USAGE.md)**: Detailed usage guide with examples
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)**: System architecture and design decisions
+- **[SECURITY.md](docs/SECURITY.md)**: Security considerations and best practices
 - **[CONTRIBUTING.md](CONTRIBUTING.md)**: Guidelines for contributing to the project
-- **[PROJECT_ASSESSMENT.md](PROJECT_ASSESSMENT.md)**: Comprehensive project assessment
-- **[OPTIONAL_IMPROVEMENTS.md](OPTIONAL_IMPROVEMENTS.md)**: List of optional future enhancements
+- **[PROJECT_ASSESSMENT.md](docs/PROJECT_ASSESSMENT.md)**: Comprehensive project assessment
+- **[OPTIONAL_IMPROVEMENTS.md](docs/OPTIONAL_IMPROVEMENTS.md)**: List of optional future enhancements
+- **[API Documentation](docs/api/index.md)**: Detailed API reference
 
 ## Security
 
@@ -290,7 +293,7 @@ Backpack prioritizes security through:
 - No plain text secrets on disk
 - User consent prompts for credential access
 
-For detailed security information, see [SECURITY.md](SECURITY.md).
+For detailed security information, see [SECURITY.md](docs/SECURITY.md).
 
 ## The "JIT" Variable Injection Workflow
 
@@ -329,7 +332,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Project Assessment
 
-For a detailed assessment of the project's current state, strengths, gaps, and recommendations, see [PROJECT_ASSESSMENT.md](PROJECT_ASSESSMENT.md).
+For a detailed assessment of the project's current state, strengths, gaps, and recommendations, see [PROJECT_ASSESSMENT.md](docs/PROJECT_ASSESSMENT.md).
 
 ## Support
 
