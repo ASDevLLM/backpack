@@ -198,14 +198,14 @@ class TestDecryptData:
     def test_decrypt_data_corrupted_data(self):
         """Test that corrupted encrypted data fails to decrypt."""
         password = "test-password"
-        
+
         # Create corrupted encrypted data
         corrupted = {
             "data": "invalid-base64-data!!!",
-            "salt": base64.b64encode(b"test-salt").decode()
+            "salt": base64.b64encode(b"test-salt").decode(),
         }
-        
-        with pytest.raises(Exception):
+
+        with pytest.raises(DecryptionError):
             decrypt_data(corrupted, password)
     
     def test_decrypt_data_corrupted_salt(self):
@@ -256,22 +256,22 @@ class TestCryptoValidation:
     def test_derive_key_invalid_type(self):
         """Test that non-string password raises ValidationError."""
         with pytest.raises(ValidationError):
-            derive_key(123)
-    
+            derive_key(123)  # type: ignore
+
     def test_encrypt_data_none(self):
         """Test that None data raises ValidationError."""
         with pytest.raises(ValidationError):
-            encrypt_data(None, "password")
-    
+            encrypt_data(None, "password")  # type: ignore
+
     def test_encrypt_data_invalid_type(self):
         """Test that non-string data raises ValidationError."""
         with pytest.raises(ValidationError):
-            encrypt_data(123, "password")
-    
+            encrypt_data(123, "password")  # type: ignore
+
     def test_decrypt_data_invalid_type(self):
         """Test that non-dict encrypted data raises ValidationError."""
         with pytest.raises(ValidationError):
-            decrypt_data("not a dict", "password")
+            decrypt_data("not a dict", "password")  # type: ignore
     
     def test_decrypt_data_missing_keys(self):
         """Test that missing keys in encrypted dict raises ValidationError."""

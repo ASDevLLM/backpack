@@ -34,7 +34,7 @@ class TestCLIInit:
             agent_lock = AgentLock()
             agent_lock.master_key = "default-key"
             data = agent_lock.read()
-            
+
             assert data is not None
             assert "OPENAI_API_KEY" in data["credentials"]
             assert "TWITTER_TOKEN" in data["credentials"]

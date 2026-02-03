@@ -10,7 +10,7 @@ high-level operation results are logged.
 
 import json
 import logging
-from typing import Dict, Optional
+from typing import Dict, Optional, cast
 
 import keyring
 import keyring.errors
@@ -129,7 +129,7 @@ def list_keys() -> Dict[str, bool]:
         registry = get_key("_registry")
         if registry:
             try:
-                return json.loads(registry)
+                return cast(Dict[str, bool], json.loads(registry))
             except json.JSONDecodeError:
                 return {}
         return {}

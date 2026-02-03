@@ -12,6 +12,7 @@ types and high-level status are logged.
 import base64
 import logging
 import os
+from typing import Optional, Tuple
 
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives import hashes
@@ -28,7 +29,7 @@ from .exceptions import (
 logger = logging.getLogger(__name__)
 
 
-def derive_key(password: str, salt: bytes = None) -> bytes:
+def derive_key(password: str, salt: Optional[bytes] = None) -> Tuple[bytes, bytes]:
     """
     Derive an encryption key from a password using PBKDF2.
 
