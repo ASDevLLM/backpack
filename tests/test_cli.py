@@ -16,7 +16,7 @@ from backpack.keychain import store_key, register_key, delete_key
 class TestCLIInit:
     """Tests for init command."""
     
-    def test_init_basic(self, mock_keyring, temp_dir):
+    def test_init_basic(self, mock_keyring, temp_dir, clean_env):
         """Test basic agent initialization."""
         runner = CliRunner()
         original_dir = os.getcwd()
@@ -44,7 +44,7 @@ class TestCLIInit:
         finally:
             os.chdir(original_dir)
     
-    def test_init_no_credentials(self, mock_keyring, temp_dir):
+    def test_init_no_credentials(self, mock_keyring, temp_dir, clean_env):
         """Test initialization with only personality."""
         runner = CliRunner()
         original_dir = os.getcwd()
@@ -68,7 +68,7 @@ class TestCLIInit:
         finally:
             os.chdir(original_dir)
     
-    def test_init_no_personality(self, mock_keyring, temp_dir):
+    def test_init_no_personality(self, mock_keyring, temp_dir, clean_env):
         """Test initialization with only credentials."""
         runner = CliRunner()
         original_dir = os.getcwd()
@@ -291,7 +291,7 @@ class TestCLIHelp:
 class TestCLIQuickstart:
     """Tests for quickstart command."""
 
-    def test_quickstart_non_interactive(self, mock_keyring, temp_dir):
+    def test_quickstart_non_interactive(self, mock_keyring, temp_dir, clean_env):
         """Test quickstart with --non-interactive creates agent.lock and agent.py."""
         runner = CliRunner()
         original_dir = os.getcwd()
@@ -321,7 +321,7 @@ class TestCLITemplate:
         assert result.exit_code == 0
         assert "financial_analyst" in result.output or "code_reviewer" in result.output or "twitter_bot" in result.output
 
-    def test_template_use(self, mock_keyring, temp_dir):
+    def test_template_use(self, mock_keyring, temp_dir, clean_env):
         """Test template use creates agent.lock and agent.py from template."""
         runner = CliRunner()
         original_dir = os.getcwd()
